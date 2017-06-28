@@ -19,6 +19,7 @@ GOPATH="/home/vagrant/go"
 MINIKUBE="${dir}/../../../examples/minikube"
 K8SDIR="${dir}/../../../examples/kubernetes"
 GSGDIR="${dir}/deployments/gsg"
+DOCKER_IMAGE_TAG="local_build"
 
 function cleanup {
 	kubectl delete -f "${MINIKUBE}/l3_l4_l7_policy.yaml" 2> /dev/null || true
@@ -43,7 +44,7 @@ function finish_test {
 	cleanup
 }
 
-trap finish_test exit
+#trap finish_test exit
 
 cleanup
 
