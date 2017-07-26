@@ -71,11 +71,14 @@ type Owner interface {
 	// QueueEndpointBuild puts the given request in the processing queue
 	QueueEndpointBuild(*Request)
 
-	// RemoveFromEndpointQueue removes all requests from the working que
+	// RemoveFromEndpointQueue removes all requests from the working queue
 	RemoveFromEndpointQueue(epID uint64)
 
 	// Returns true if debugging has been enabled
 	DebugEnabled() bool
+
+	// Annotates endpoint e with an annotation with key annotationKey, and value annotationValue.
+	AnnotateEndpoint(e *Endpoint, annotationKey, annotationValue string) error
 }
 
 // Request is used to create the endpoint's request and send it to the endpoints

@@ -471,6 +471,7 @@ func (e *Endpoint) SetIdentity(owner Owner, id *policy.Identity) {
 		e.State = StateReady
 	}
 
+	owner.AnnotateEndpoint(e, "cilium-identity", e.SecLabel.ID.String())
 	e.Consumable.Mutex.RLock()
 	log.Debugf("Set identity of EP %d to %d and consumable to %+v", e.ID, id, e.Consumable)
 	e.Consumable.Mutex.RUnlock()

@@ -62,8 +62,10 @@ import (
 	dClient "github.com/docker/engine-api/client"
 	"github.com/go-openapi/runtime/middleware"
 	"github.com/vishvananda/netlink"
+	meta_v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/kubernetes/pkg/registry/core/service/ipallocator"
+
 )
 
 const (
@@ -249,10 +251,32 @@ func (d *Daemon) PolicyEnforcement() string {
 	return d.conf.EnablePolicy
 }
 
-// DebugEnabled returns whether if debug mode is enabled.
+// DebugEnabled returns if debug mode is enabled.
 func (d *Daemon) DebugEnabled() bool {
 	return d.conf.Opts.IsEnabled(endpoint.OptionDebug)
 }
+
+func (d *Daemon) AnnotateEndpoint(e *endpoint.Endpoint, annotationKey, annotationValue string) error {
+
+	if !d.conf.IsK8sEnabled() {
+		return nil // Don't error out if k8s is not enabled; treat as a no-op.
+	}
+	log.Debugf("k8s enabled, continuing")
+	pod, err := d.k8sClient.CoreV1().Pods("foo").Get("bar", meta_v1.GetOptions{})
+	if err != nil {
+		return fmt.Errorf("error getting pod name for endpoint %d: %s", e.ID, err)
+	}
+	pod.Annotations[annotationKey] = annotationValue
+
+	log.Debugf("trying to add annotation")
+	_, err = d.k8sClient.CoreV1().Pods("foo").Update(pod)
+	if err != nil {
+		return fmt.Errorf("error annotating endpoint: %s", err)
+	}
+
+	return nil
+}
+
 
 func createDockerClient(endpoint string) (*dClient.Client, error) {
 	defaultHeaders := map[string]string{"User-Agent": "cilium"}
