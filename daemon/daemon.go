@@ -1098,6 +1098,8 @@ func (h *getConfig) Handle(params GetConfigParams) middleware.Responder {
 	cfg := &models.DaemonConfigurationResponse{
 		Addressing:    d.getNodeAddressing(),
 		Configuration: d.conf.Opts.GetModel(),
+		K8sConfiguration: d.conf.K8sCfgPath,
+		K8sEndpoint: d.conf.K8sEndpoint,
 	}
 
 	return NewGetConfigOK().WithPayload(cfg)

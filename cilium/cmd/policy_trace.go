@@ -105,23 +105,34 @@ dports can be can be for example: 80/tcp, 53 or 23/udp.`,
 		}
 
 		if srcK8sPod != "" {
-			fmtdPodName := endpoint.NewID(endpoint.PodNamePrefix, srcK8sPod)
+			/*fmtdPodName := endpoint.NewID(endpoint.PodNamePrefix, srcK8sPod)
 			_, _, err := endpoint.ValidateID(fmtdPodName)
 			if err != nil {
 				Fatalf("Cannot parse pod name \"%s\": %s", fmtdPodName, err)
 			}
 
-			srcSlice = appendEpLabelsToSlice(fmtdPodName, srcSlice)
+			srcSlice = appendEpLabelsToSlice(fmtdPodName, srcSlice)*/
+			id, err := getSecIdFromK8s(srcK8sPod)
+			if err != nil {
+				Fatalf("Cannot get security id from k8s pod name: %s", err)
+			}
+			fmt.Printf("secid from srcK8sPod: %s", id)
 		}
 
 		if dstK8sPod != "" {
-			fmtdPodName := endpoint.NewID(endpoint.PodNamePrefix, dstK8sPod)
+			/*fmtdPodName := endpoint.NewID(endpoint.PodNamePrefix, dstK8sPod)
 			_, _, err := endpoint.ValidateID(fmtdPodName)
 			if err != nil {
 				Fatalf("Cannot parse pod name \"%s\": %s", fmtdPodName, err)
 			}
 
-			dstSlice = appendEpLabelsToSlice(fmtdPodName, dstSlice)
+			dstSlice = appendEpLabelsToSlice(fmtdPodName, dstSlice)*/
+			id, err := getSecIdFromK8s(dstK8sPod)
+			if err != nil {
+				Fatalf("Cannot get security id from k8s pod name: %s", err)
+			}
+			fmt.Printf("secid from dstK8sPod: %s", id)
+
 		}
 
 		search := models.IdentityContext{
