@@ -78,7 +78,7 @@ type Owner interface {
 	DebugEnabled() bool
 
 	// Annotates endpoint e with an annotation with key annotationKey, and value annotationValue.
-	AnnotateEndpoint(e *Endpoint, annotationKey, annotationValue string) error
+	AnnotateEndpoint(e *Endpoint, annotationKey, annotationValue string)
 }
 
 // Request is used to create the endpoint's request and send it to the endpoints

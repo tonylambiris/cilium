@@ -66,6 +66,7 @@ import (
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/kubernetes/pkg/registry/core/service/ipallocator"
 
+	"k8s.io/client-go/pkg/api/v1"
 )
 
 const (
@@ -256,25 +257,36 @@ func (d *Daemon) DebugEnabled() bool {
 	return d.conf.Opts.IsEnabled(endpoint.OptionDebug)
 }
 
-func (d *Daemon) AnnotateEndpoint(e *endpoint.Endpoint, annotationKey, annotationValue string) error {
+func (d *Daemon) AnnotateEndpoint(e *endpoint.Endpoint, annotationKey, annotationValue string) {
 
 	if !d.conf.IsK8sEnabled() {
-		return nil // Don't error out if k8s is not enabled; treat as a no-op.
+		return // Don't error out if k8s is not enabled; treat as a no-op.
 	}
 	log.Debugf("k8s enabled, continuing")
-	pod, err := d.k8sClient.CoreV1().Pods("foo").Get("bar", meta_v1.GetOptions{})
+	split := strings.Split(e.PodName, ":")
+	pod, err := d.k8sClient.CoreV1().Pods(split[0]).Get(split[1], meta_v1.GetOptions{})
 	if err != nil {
-		return fmt.Errorf("error getting pod name for endpoint %d: %s", e.ID, err)
+		log.Errorf("error getting pod name for endpoint %d: %s", e.ID, err)
+		return
 	}
 	pod.Annotations[annotationKey] = annotationValue
 
 	log.Debugf("trying to add annotation")
-	_, err = d.k8sClient.CoreV1().Pods("foo").Update(pod)
+	_, err = d.k8sClient.CoreV1().Pods(split[0]).Update(pod)
 	if err != nil {
-		return fmt.Errorf("error annotating endpoint: %s", err)
+		log.Errorf("k8s: unable to update pod %s with \"cilium-identity\" annotation: %s, retrying...", e.PodName, err)
+		go func(e *endpoint.Endpoint, namespace string, pod *v1.Pod) {
+			// TODO: Retry forever?
+			for n := 0; err != nil; {
+				log.Errorf("k8s: unable to update pod %s with \"cilium-identity\" annotation: %s, retrying...", e.PodName, err)
+				_, err = d.k8sClient.CoreV1().Pods(namespace).Update(pod)
+				if n < 30 {
+					n++
+				}
+				time.Sleep(time.Duration(n) * time.Second)
+			}
+		}(e, split[0], pod)
 	}
-
-	return nil
 }
 
 
