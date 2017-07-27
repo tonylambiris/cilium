@@ -105,33 +105,35 @@ dports can be can be for example: 80/tcp, 53 or 23/udp.`,
 		}
 
 		if srcK8sPod != "" {
-			/*fmtdPodName := endpoint.NewID(endpoint.PodNamePrefix, srcK8sPod)
-			_, _, err := endpoint.ValidateID(fmtdPodName)
-			if err != nil {
-				Fatalf("Cannot parse pod name \"%s\": %s", fmtdPodName, err)
-			}
-
-			srcSlice = appendEpLabelsToSlice(fmtdPodName, srcSlice)*/
 			id, err := getSecIdFromK8s(srcK8sPod)
 			if err != nil {
 				Fatalf("Cannot get security id from k8s pod name: %s", err)
 			}
-			fmt.Printf("secid from srcK8sPod: %s", id)
+			convertedId, err := strconv.ParseInt(id, 0, 64)
+			if err != nil {
+				Fatalf("Error converting security id %s to int64", id)
+			}
+			srcSecurityIDLabels, err := getLabelsFromIdentity(convertedId)
+			if err != nil {
+				Fatalf("%s",err)
+			}
+			srcSlice = append(srcSlice, srcSecurityIDLabels...)
 		}
 
 		if dstK8sPod != "" {
-			/*fmtdPodName := endpoint.NewID(endpoint.PodNamePrefix, dstK8sPod)
-			_, _, err := endpoint.ValidateID(fmtdPodName)
-			if err != nil {
-				Fatalf("Cannot parse pod name \"%s\": %s", fmtdPodName, err)
-			}
-
-			dstSlice = appendEpLabelsToSlice(fmtdPodName, dstSlice)*/
 			id, err := getSecIdFromK8s(dstK8sPod)
 			if err != nil {
 				Fatalf("Cannot get security id from k8s pod name: %s", err)
 			}
-			fmt.Printf("secid from dstK8sPod: %s", id)
+			convertedId, err := strconv.ParseInt(id, 0, 64)
+			if err != nil {
+				Fatalf("Error converting security id %s to int64", id)
+			}
+			dstSecurityIDLabels, err := getLabelsFromIdentity(convertedId)
+			if err != nil {
+				Fatalf("%s",err)
+			}
+			dstSlice = append(dstSlice, dstSecurityIDLabels...)
 
 		}
 
@@ -144,7 +146,7 @@ dports can be can be for example: 80/tcp, 53 or 23/udp.`,
 
 		params := NewGetPolicyResolveParams().WithIdentityContext(&search)
 		if scr, err := client.Policy.GetPolicyResolve(params); err != nil {
-			Fatalf("Error while retrieving policy consume result: %s\n", err)
+			Fatalf("Error while retrieving policy assessment result: %s\n", err)
 		} else if scr != nil && scr.Payload != nil {
 			fmt.Printf("%s\n", scr.Payload.Log)
 			fmt.Printf("Verdict: %s\n", scr.Payload.Verdict)

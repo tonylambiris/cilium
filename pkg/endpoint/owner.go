@@ -47,7 +47,7 @@ type Owner interface {
 	// Must return an instance of a ConsumableCache
 	GetConsumableCache() *policy.ConsumableCache
 
-	// Must resolve label id to an identiy
+	// Must resolve label id to an identity
 	GetCachedLabelList(ID policy.NumericIdentity) (labels.LabelArray, error)
 
 	// Must return the policy repository
