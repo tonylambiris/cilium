@@ -41,14 +41,16 @@ func (r *rule) validate() error {
 	return nil
 }
 
-func mergeL4Port(ctx *SearchContext, r api.PortRule, p api.PortProtocol, dir string, proto string, resMap L4PolicyMap) int {
+func mergeL4Port(fromEndpoints []api.EndpointSelector, r api.PortRule, p api.PortProtocol,
+	dir string, proto string, resMap L4PolicyMap) int {
+
 	fmt := p.Port + "/" + proto
 	v, ok := resMap[fmt]
 	if !ok {
-		resMap[fmt] = CreateL4Filter(r, p, dir, proto)
+		resMap[fmt] = CreateL4Filter(fromEndpoints, r, p, dir, proto)
 		return 1
 	}
-	l4Filter := CreateL4Filter(r, p, dir, proto)
+	l4Filter := CreateL4Filter(fromEndpoints, r, p, dir, proto)
 	if l4Filter.L7Parser != "" {
 		v.L7Parser = l4Filter.L7Parser
 	}
@@ -60,7 +62,9 @@ func mergeL4Port(ctx *SearchContext, r api.PortRule, p api.PortProtocol, dir str
 	return 1
 }
 
-func mergeL4(ctx *SearchContext, dir string, portRules []api.PortRule, resMap L4PolicyMap) int {
+func mergeL4(ctx *SearchContext, dir string, fromEndpoints []api.EndpointSelector, portRules []api.PortRule,
+	resMap L4PolicyMap) int {
+
 	found := 0
 
 	for _, r := range portRules {
@@ -78,10 +82,10 @@ func mergeL4(ctx *SearchContext, dir string, portRules []api.PortRule, resMap L4
 
 		for _, p := range r.Ports {
 			if p.Protocol != "" {
-				found += mergeL4Port(ctx, r, p, dir, p.Protocol, resMap)
+				found += mergeL4Port(fromEndpoints, r, p, dir, p.Protocol, resMap)
 			} else {
-				found += mergeL4Port(ctx, r, p, dir, "tcp", resMap)
-				found += mergeL4Port(ctx, r, p, dir, "udp", resMap)
+				found += mergeL4Port(fromEndpoints, r, p, dir, "tcp", resMap)
+				found += mergeL4Port(fromEndpoints, r, p, dir, "udp", resMap)
 			}
 		}
 	}
@@ -101,13 +105,13 @@ func (r *rule) resolveL4Policy(ctx *SearchContext, state *traceState, result *L4
 
 	if !ctx.EgressL4Only {
 		for _, r := range r.Ingress {
-			found += mergeL4(ctx, "Ingress", r.ToPorts, result.Ingress)
+			found += mergeL4(ctx, "Ingress", r.FromEndpoints, r.ToPorts, result.Ingress)
 		}
 	}
 
 	if !ctx.IngressL4Only {
 		for _, r := range r.Egress {
-			found += mergeL4(ctx, "Egress", r.ToPorts, result.Egress)
+			found += mergeL4(ctx, "Egress", []api.EndpointSelector{}, r.ToPorts, result.Egress)
 		}
 	}
 

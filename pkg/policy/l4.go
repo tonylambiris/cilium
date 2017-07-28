@@ -33,6 +33,8 @@ type L4Filter struct {
 	Port int
 	// Protocol is the L4 protocol to allow or NONE
 	Protocol string
+	// From Endpoints
+	FromEndpoints []api.EndpointSelector
 	// L7Parser specifies the L7 protocol parser (optional)
 	L7Parser string
 	// L7RedirectPort is the L7 proxy port to redirect to (optional)
@@ -44,7 +46,8 @@ type L4Filter struct {
 }
 
 // CreateL4Filter creates an L4Filter based on an api.PortRule and api.PortProtocol
-func CreateL4Filter(rule api.PortRule, port api.PortProtocol, direction string, protocol string) L4Filter {
+func CreateL4Filter(fromEndpoints []api.EndpointSelector, rule api.PortRule, port api.PortProtocol,
+	direction string, protocol string) L4Filter {
 	// already validated via PortRule.Validate()
 	p, _ := strconv.ParseUint(port.Port, 0, 16)
 
@@ -52,6 +55,7 @@ func CreateL4Filter(rule api.PortRule, port api.PortProtocol, direction string, 
 		Port:           int(p),
 		Protocol:       protocol,
 		L7RedirectPort: rule.RedirectPort,
+		FromEndpoints:  fromEndpoints,
 	}
 
 	if strings.ToLower(direction) == "ingress" {

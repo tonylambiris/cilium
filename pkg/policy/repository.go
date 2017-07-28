@@ -101,10 +101,9 @@ func (p *Repository) AllowsRLocked(ctx *SearchContext) api.Decision {
 
 // ResolveL4Policy resolves the L4 policy for a set of endpoints by searching
 // the policy repository for `PortRule` rules that are attached to a `Rule`
-// where the EndpointSelector matches `ctx.To`. `ctx.From` takes no effect and
-// is ignored in the search.  If multiple `PortRule` rules are found, all rules
-// are merged together. If rules contains overlapping port definitions, the first
-// rule found in the repository takes precedence.
+// where the EndpointSelector matches `ctx.To`. If multiple `PortRule` rules are found,
+// all rules are merged together. If rules contains overlapping port definitions,
+// the first rule found in the repository takes precedence.
 //
 // TODO: Need better rule merging on conflicting port definitions, concat l7 rules?
 func (p *Repository) ResolveL4Policy(ctx *SearchContext) *L4Policy {
