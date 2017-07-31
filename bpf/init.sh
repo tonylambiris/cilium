@@ -91,6 +91,9 @@ ip link set $HOST_DEV1 arp off
 ip link set $HOST_DEV2 up
 ip link set $HOST_DEV2 arp off
 
+sysctl -w net.ipv4.conf.${HOST_DEV1}.rp_filter=0
+sysctl -w net.ipv4.conf.${HOST_DEV2}.rp_filter=0
+
 HOST_IDX=$(cat /sys/class/net/${HOST_DEV2}/ifindex)
 echo "#define HOST_IFINDEX $HOST_IDX" >> $RUNDIR/globals/node_config.h
 
